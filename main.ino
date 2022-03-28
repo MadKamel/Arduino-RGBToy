@@ -1,13 +1,32 @@
-// Code written by MadKamel. Hello!
+/* Code written by MadKamel, the astounding computer jockey.
+
+		This code will control a little RGB light with a button. Simple. I hope to also expand functionality with an
+	IR remote control later on, once I figure out how it works.
+	
+		This project uses:
+
+			*Arduino UNO R3
+			*Breadboard, Wires, Doohickeys
+			*220 Ohm Resistor
+			*10K Ohm Resistor
+			*4-pin Contact Push Button
+			*Common Cathode RGB LED (May have used the wrong word; it has a common ground pin)
+			*Maybe some Capacitors later on (Spoiler alert: no capacitors used)
+			*IR Signal Reciever
+
+		Here's some code:
+*/
 // TODO: get a 10K ohm resistor and fix the button lmao
 // TODO: figure out how to get the IR receiver to work
-int R = 9;
-int G = 10;
-int B = 11;
-int BTN = 2;
-int BRIGHTNESS = 32;
-bool EXPECTED_BTN_STATE = false;
-int COLOUR = 0;
+// TODO: figure out how to fix button jitter... capacitors?
+
+int R = 9;				// pin for RGB LED's red input
+int G = 10;				// pin for RGB LED's green input
+int B = 11;				// pin for RGB LED's blue input
+int BTN = 2;				// pin for button
+int BRIGHTNESS = 8;			// this variable tracks the actual number by which to reduce brightness.
+bool EXPECTED_BTN_STATE = false;	// this variable tracks the current state of the button, whether it be up or down.
+int COLOUR = 0;				// this variable tracks the current colour
 
 void setup() {
 	pinMode(R, OUTPUT);
@@ -68,57 +87,57 @@ void setbrightness(int brightness) {
 //6: magenta(ish)
 //7: orange
 //8: turquoise (actually good colour)
-//9: bluey white
+//9: bluey white (white, but it has more blue)
 void setcolour(int colour) {
 	switch(colour) {
-		case 0:
+		case 0: // white
 			analogWrite(R, 255/BRIGHTNESS);
 			analogWrite(G, 255/BRIGHTNESS);
 			analogWrite(B, 255/BRIGHTNESS);
 		break;
-		case 1:
+		case 1: // red
 			analogWrite(R, 255/BRIGHTNESS);
 			analogWrite(G, 0/BRIGHTNESS);
 			analogWrite(B, 0/BRIGHTNESS);
 		break;
-		case 2:
+		case 2: // green
 			analogWrite(R, 0/BRIGHTNESS);
 			analogWrite(G, 255/BRIGHTNESS);
 			analogWrite(B, 0/BRIGHTNESS);
 		break;
-		case 3:
+		case 3: // blue
 			analogWrite(R, 0/BRIGHTNESS);
 			analogWrite(G, 0/BRIGHTNESS);
 			analogWrite(B, 255/BRIGHTNESS);
 		break;
-		case 4:
+		case 4: // cyan
 			analogWrite(R, 0/BRIGHTNESS);
 			analogWrite(G, 255/BRIGHTNESS);
 			analogWrite(B, 255/BRIGHTNESS);
 		break;
-		case 5:
+		case 5: // yellow(ish)
 			analogWrite(R, 255/BRIGHTNESS);
 			analogWrite(G, 255/BRIGHTNESS);
 			analogWrite(B, 0/BRIGHTNESS);
 		break;
-		case 6:
+		case 6: // magenta(ish)
 			analogWrite(R, 255/BRIGHTNESS);
 			analogWrite(G, 0/BRIGHTNESS);
 			analogWrite(B, 255/BRIGHTNESS);
 		break;
-		case 7:
+		case 7: // orange
 			analogWrite(R, 255/BRIGHTNESS);
 			analogWrite(G, 80/BRIGHTNESS);
 			analogWrite(B, 0/BRIGHTNESS);
 		break;
-		case 8:
+		case 8: // turquoise
 			analogWrite(R, 0/BRIGHTNESS);
 			analogWrite(G, 80/BRIGHTNESS);
 			analogWrite(B, 255/BRIGHTNESS);
 		break;
-		case 9:
-			analogWrite(R, 80/BRIGHTNESS);
-			analogWrite(G, 80/BRIGHTNESS);
+		case 9: // bluey white
+			analogWrite(R, 127/BRIGHTNESS);
+			analogWrite(G, 127/BRIGHTNESS);
 			analogWrite(B, 255/BRIGHTNESS);
 		break;
 		default:
@@ -133,7 +152,7 @@ void setcolour(int colour) {
 
 //this function smoothly brings up a colour.
 //really only one downside to speak of- it cannot be configured to change brightness.
-void flashcolour(int relative_delay, int main_delay, int colour) {
+void flashcolour(int relative_delay, int main_delay, int colour, bool exit_flash) {
 	setbrightness(0);
 	setcolour(colour);
 	delay(relative_delay);
@@ -151,37 +170,35 @@ void flashcolour(int relative_delay, int main_delay, int colour) {
 	delay(relative_delay);
 	setbrightness(5);
 	setcolour(colour);
-	delay(main_delay);
-	setbrightness(4);
-	setcolour(colour);
-	delay(relative_delay);
-	setbrightness(3);
-	setcolour(colour);
-	delay(relative_delay);
-	setbrightness(2);
-	setcolour(colour);
-	delay(relative_delay);
-	setbrightness(1);
-	setcolour(colour);
-	delay(relative_delay);
-	setbrightness(0);
-	setcolour(colour);
-	delay(relative_delay);
-	setbrightness(0);
-	setcolour(colour);
+
+	if(exit_flash) { // only run if the flash will not fade away.
+		delay(main_delay);
+		setbrightness(4);
+		setcolour(colour);
+		delay(relative_delay);
+		setbrightness(3);
+		setcolour(colour);
+		delay(relative_delay);
+		setbrightness(2);
+		setcolour(colour);
+		delay(relative_delay);
+		setbrightness(1);
+		setcolour(colour);
+		delay(relative_delay);
+		setbrightness(0);
+		setcolour(colour);
+		delay(relative_delay);
+		setbrightness(0);
+		setcolour(colour);
+	}
 }
 
 //this is the mainloop function.
-//current configuration: switch between colours.
-void loop() {
-	flashcolour(10, 1000, 0);
-	flashcolour(10, 1000, 1);
-	flashcolour(10, 1000, 2);
-	flashcolour(10, 1000, 3);
-	flashcolour(10, 1000, 4);
-	flashcolour(10, 1000, 5);
-	flashcolour(10, 1000, 6);
-	flashcolour(10, 1000, 7);
-	flashcolour(10, 1000, 8);
-	flashcolour(10, 1000, 9);
+//current configuration: wait for the button to get pressed, then change colour.
+void loop() {						// upon iterating mainloop-
+	if(keypress()) {				// if button is pressed once
+		setcolour(10);				// get the next colour (colour 10 cycles to the next one)
+		flashcolour(10, 1000, COLOUR, false);	// display the current colour
+		delay(100);				// wait a bit in case the button jitters.
+	}
 }
